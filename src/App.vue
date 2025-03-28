@@ -4,7 +4,7 @@
     <LoadingBar />
 
     <!-- Header -->
-    <header class="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg">
+    <header class="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 to-blue-700  shadow-lg">
       <div class="container mx-auto px-4">
         <div class="flex items-center justify-between h-16">
           <!-- Logo/Title -->
