@@ -146,46 +146,59 @@ const handleBlur = () => {
 }
 
 async function submitOrder() {
-  if (store.loading) return
+  if (store.loading) return;
 
-  let clientIdToUse: number | undefined
+  let clientIdToUse: number | undefined;
+
   if (selectedClient.value) {
-    clientIdToUse = selectedClient.value.id
+    clientIdToUse = selectedClient.value.id;
   } else if (isNewClient.value && newClientName.value) {
     try {
       const newClient = await store.createClient({
         name: newClientName.value,
-        phone: clientSearch.value
-      })
-      clientIdToUse = newClient.id
+        phone: clientSearch.value,
+      });
+
+      // Log the newClient to check its structure
+      console.log('New client created:', newClient);
+
+      // Ensure newClient has an id property
+      if (newClient && newClient.id) {
+        clientIdToUse = newClient.id;
+      } else {
+        alert('Failed to retrieve new client ID');
+        console.error('New client does not have an id property:', newClient);
+        return;
+      }
     } catch (error) {
-      alert('Failed to create new client')
-      console.error('Error creating client:', error)
-      return
+      alert('Failed to create new client');
+      console.error('Error creating client:', error);
+      return;
     }
   }
 
-  if (!clientIdToUse) return
+  if (!clientIdToUse) return;
 
   const orderData = {
     bike_ids: selectedBikeIds.value,
     start_time: new Date().toISOString().slice(0, 19).replace('T', ' '),
     status: 'active',
     client_id: clientIdToUse,
-  }
+  };
 
   try {
-    await store.createOrder(orderData)
-    selectedBikeIds.value = []
-    clientSearch.value = ''
-    newClientName.value = ''
-    selectedClient.value = null
-    bikeSearch.value = ''
-    await store.fetchOrders()
-    await store.fetchClients()
+    await store.createOrder(orderData);
+    selectedBikeIds.value = [];
+    clientSearch.value = '';
+    newClientName.value = '';
+    selectedClient.value = null;
+    bikeSearch.value = '';
+    await store.fetchOrders();
+    await store.fetchClients();
   } catch (error) {
-    alert('Failed to create order')
-    console.error('Error creating order:', error)
+    alert('Failed to create order');
+    console.error('Error creating order:', error);
   }
 }
+
 </script>

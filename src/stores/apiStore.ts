@@ -13,10 +13,12 @@ interface Client {
   name: string;
   phone: string;
 }
+
 interface ClientData {
   name: string;
   phone: string;
 }
+
 interface Order {
   id: number;
   bike_ids: string;
@@ -67,47 +69,63 @@ export const useApiStore = defineStore("api", () => {
     try {
       await operation();
       dataLoaded.value[dataType] = true;
+    } catch (error) {
+      console.error(`Failed to load ${dataType}:`, error);
     } finally {
       loading.value = false;
     }
   };
 
   async function fetchBikes() {
-    return withLoading(async () => {
+    await withLoading(async () => {
       const response = await axios.get(`${apiBaseUrl}/bikes`);
       bikes.value = response.data;
     }, "bikes");
   }
 
   async function fetchClients() {
-    return withLoading(async () => {
+    await withLoading(async () => {
       const response = await axios.get(`${apiBaseUrl}/clients`);
       clients.value = response.data;
     }, "clients");
   }
+
   async function createClient(clientData: ClientData) {
-    return withLoading(async () => {
-      const response = await axios.post(`${apiBaseUrl}/clients`, clientData);
-      clients.value.push(response.data);
-      return response.data;
-    }, "clients");
+    const response = await axios.post(`${apiBaseUrl}/clients`, clientData);
+  
+    // Log the response to verify its structure
+    console.log('API Response:', response.data);
+  
+    // Ensure the response contains the expected client object
+    if (response.data && response.data.id) {
+      const newClient = {
+        id: response.data.id,
+        name: clientData.name,
+        phone: clientData.phone,
+      };
+      clients.value.push(newClient);
+      return newClient;
+    } else {
+      throw new Error('Failed to create client: Invalid response');
+    }
   }
+
   async function fetchOrders() {
-    return withLoading(async () => {
+    await withLoading(async () => {
       const response = await axios.get(`${apiBaseUrl}/orders`);
       orders.value = response.data;
     }, "orders");
   }
 
   async function fetchPrices() {
-    return withLoading(async () => {
+    await withLoading(async () => {
       const response = await axios.get(`${apiBaseUrl}/prices`);
       prices.value = response.data;
     }, "prices");
   }
 
   async function createOrder(orderData: OrderData) {
-    return withLoading(async () => {
+    await withLoading(async () => {
       const response = await axios.post(`${apiBaseUrl}/orders`, orderData);
       orders.value.push(response.data);
       return response.data;
@@ -115,7 +133,7 @@ export const useApiStore = defineStore("api", () => {
   }
 
   async function updateOrder(orderId: number, orderData: Partial<OrderData>) {
-    return withLoading(async () => {
+    await withLoading(async () => {
       const response = await axios.put(
         `${apiBaseUrl}/orders/${orderId}`,
         orderData
@@ -129,7 +147,7 @@ export const useApiStore = defineStore("api", () => {
   }
 
   async function updateBike(bikeId: number, bikeData: Partial<Bike>) {
-    return withLoading(async () => {
+    await withLoading(async () => {
       const response = await axios.put(`${apiBaseUrl}/bikes/${bikeId}`, bikeData);
       const index = bikes.value.findIndex((bike) => bike.id === bikeId);
       if (index !== -1) {
