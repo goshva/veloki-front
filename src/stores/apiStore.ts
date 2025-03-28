@@ -119,6 +119,17 @@ export const useApiStore = defineStore("api", () => {
     }, "orders");
   }
 
+  async function updateBike(bikeId: number, bikeData: Partial<Bike>) {
+    return withLoading(async () => {
+      const response = await axios.put(`${apiBaseUrl}/bikes/${bikeId}`, bikeData);
+      const index = bikes.value.findIndex((bike) => bike.id === bikeId);
+      if (index !== -1) {
+        bikes.value[index] = { ...bikes.value[index], ...response.data };
+      }
+      return response.data;
+    }, "bikes");
+  }
+
   return {
     // State
     bikes,
@@ -135,5 +146,6 @@ export const useApiStore = defineStore("api", () => {
     fetchPrices,
     createOrder,
     updateOrder,
+    updateBike,
   };
 });

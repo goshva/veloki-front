@@ -1,5 +1,6 @@
 <template>
   <div class="bg-neon-gray p-4 rounded-xl shadow-lg">
+    <BikeEdit v-if="selectedBike" :selectedBike="selectedBike" @save="saveBike" />
     <h2 class="text-lg font-semibold text-cyber-teal mb-3">Bikes</h2>
     <template v-if="store.dataLoaded.bikes">
       <ul v-if="store.bikes.length" class="space-y-2">
@@ -12,7 +13,6 @@
       <p v-else class="text-center text-gray-500 py-4">No bikes found</p>
     </template>
     <LoadingState v-else />
-    <BikeEdit :selectedBike="selectedBike" @save="saveBike" />
   </div>
 </template>
 
@@ -31,18 +31,12 @@ onMounted(() => {
 });
 
 const editBike = (bike: Bike) => {
-  selectedBike.value = bike;
+  selectedBike.value = { ...bike };
 };
 
 const saveBike = (updatedBike: Bike) => {
-  // Assuming you have an API endpoint to update a bike
-  axios.put(`${store.apiBaseUrl}/bikes/${updatedBike.id}`, updatedBike)
-    .then(response => {
-      const index = store.bikes.findIndex(b => b.id === updatedBike.id);
-      if (index !== -1) {
-        store.bikes[index] = response.data;
-      }
-      selectedBike.value = null;
-    });
+  store.updateBike(updatedBike.id, updatedBike).then(() => {
+    selectedBike.value = null;
+  });
 };
 </script>

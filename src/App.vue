@@ -4,9 +4,7 @@
     <LoadingBar />
 
     <!-- Header -->
-    <header
-      class="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg"
-    >
+    <header class="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg">
       <div class="container mx-auto px-4">
         <div class="flex items-center justify-between h-16">
           <!-- Logo/Title -->
@@ -17,18 +15,8 @@
               class="p-2 rounded-lg hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:ring-offset-blue-600 transition-colors mr-4"
               aria-label="Toggle menu"
             >
-              <svg
-                class="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M4 6h16M4 12h16m-7 6h7"
-                />
+              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
               </svg>
             </button>
 
@@ -46,26 +34,28 @@
       <aside
         :class="[
           'fixed inset-y-0 left-0 z-40 w-64 mt-16 bg-white border-r transform transition-transform duration-300 ease-in-out',
-          isSidebarOpen
-            ? 'translate-x-0'
-            : '-translate-x-full md:translate-x-0',
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
         ]"
       >
         <nav class="h-full overflow-y-auto">
           <ul class="p-4 space-y-1">
-            <li v-for="tab in tabs" :key="tab.id">
-              <button
-                @click="setActiveTab(tab.id)"
-                :class="[
-                  'w-full px-4 py-3 rounded-lg text-left transition-colors duration-200',
-                  'hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
-                  activeTab === tab.id
-                    ? 'bg-blue-50 text-blue-600 font-medium'
-                    : 'text-gray-700',
-                ]"
+            <li v-for="route in routes" :key="route.path">
+              <router-link
+                :to="route.path"
+                v-slot="{ isActive }"
+                custom
               >
-                {{ tab.label }}
-              </button>
+                <button
+                  @click="navigateTo(route.path)"
+                  :class="[
+                    'w-full px-4 py-3 rounded-lg text-left transition-colors duration-200',
+                    'hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+                    isActive ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700',
+                  ]"
+                >
+                  {{ route.label }}
+                </button>
+              </router-link>
             </li>
           </ul>
         </nav>
@@ -88,7 +78,7 @@
 
         <!-- Content -->
         <div class="max-w-7xl mx-auto">
-          <component :is="activeComponent" />
+          <router-view></router-view>
         </div>
       </main>
     </div>
@@ -96,45 +86,32 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
-import { useApiStore } from "./stores/apiStore"; // Add this import
-import BikeList from "./components/BikeList.vue";
-import ClientList from "./components/ClientList.vue";
-import OrderList from "./components/OrderList.vue";
-import PriceList from "./components/PriceList.vue";
-import CreateOrder from "./components/CreateOrder.vue";
+import { ref } from "vue";
+import { useRouter } from 'vue-router';
+import { useApiStore } from "./stores/apiStore";
 import LoadingBar from "./components/LoadingBar.vue";
 
-const apiStore = useApiStore(); // Create store instance
+const apiStore = useApiStore();
+const router = useRouter();
 const isSidebarOpen = ref(false);
-const activeTab = ref("orders");
 
-const tabs = [
-  { id: "orders", label: "Orders", component: OrderList },
-  { id: "bikes", label: "Bikes", component: BikeList },
-  { id: "clients", label: "Clients", component: ClientList },
-  { id: "prices", label: "Prices", component: PriceList },
-  { id: "create-order", label: "Create Order", component: CreateOrder },
+const routes = [
+  { path: '/orders', label: 'Orders' },
+  { path: '/bikes', label: 'Bikes' },
+  { path: '/clients', label: 'Clients' },
+  { path: '/tariffs', label: 'Tariffs' },
+  { path: '/create-order', label: 'Create Order' },
 ];
 
 function toggleSidebar() {
   isSidebarOpen.value = !isSidebarOpen.value;
 }
 
-function setActiveTab(tabId) {
-  activeTab.value = tabId;
+function navigateTo(path) {
+  router.push(path);
   // Only close sidebar on mobile
   if (window.innerWidth < 768) {
     isSidebarOpen.value = false;
   }
 }
-
-const activeComponent = computed(() => {
-  return tabs.find((tab) => tab.id === activeTab.value)?.component || OrderList;
-});
-
-// Use the store instance to fetch orders
-onMounted(() => {
-  apiStore.fetchOrders();
-});
 </script>

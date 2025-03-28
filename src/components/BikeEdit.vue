@@ -1,46 +1,37 @@
 <template>
-    <div v-if="selectedBike" class="bg-neon-gray p-4 rounded-xl shadow-lg mt-4">
+    <div class="bg-neon-gray p-4 rounded-xl shadow-lg mt-4">
       <h3 class="text-lg font-semibold text-cyber-teal mb-3">Edit Bike</h3>
-      <form @submit.prevent="saveBike">
+      <form @submit.prevent="save">
         <div class="mb-3">
           <label class="block text-gray-700">Name</label>
-          <input v-model="selectedBike.name" type="text" class="w-full p-2 border rounded">
+          <input v-model="localBike.name" type="text" class="w-full p-2 border rounded">
         </div>
         <div class="mb-3">
           <label class="block text-gray-700">Group</label>
-          <select v-model="selectedBike.group" class="w-full p-2 border rounded">
+          <select v-model="localBike.group" class="w-full p-2 border rounded">
             <option value="mechanical">Mechanical</option>
             <option value="electric">Electric</option>
           </select>
         </div>
-        <button type="submit" class="bg-cyber-teal text-white p-2 rounded">Save</button>
+        <button type="submit" class="bg-cyber-teal p-2 rounded">Save</button>
       </form>
     </div>
   </template>
   
   <script setup lang="ts">
-  import { ref } from 'vue';
-  import { useApiStore } from '../stores/apiStore';
+  import { ref, watch } from 'vue';
   
-  const store = useApiStore();
-  const selectedBike = ref<Bike | null>(null);
+  const props = defineProps<{ selectedBike: Bike }>();
+  const emit = defineEmits<{ (e: 'save', bike: Bike): void }>();
   
-  const editBike = (bike: Bike) => {
-    selectedBike.value = { ...bike };
-  };
+  const localBike = ref<Bike>({ ...props.selectedBike });
   
-  const saveBike = () => {
-    if (selectedBike.value) {
-      // Assuming you have an API endpoint to update a bike
-      axios.put(`${store.apiBaseUrl}/bikes/${selectedBike.value.id}`, selectedBike.value)
-        .then(response => {
-          const index = store.bikes.findIndex(b => b.id === selectedBike.value!.id);
-          if (index !== -1) {
-            store.bikes[index] = response.data;
-          }
-          selectedBike.value = null;
-        });
-    }
+  watch(() => props.selectedBike, (newBike) => {
+    localBike.value = { ...newBike };
+  });
+  
+  const save = () => {
+    emit('save', localBike.value);
   };
   </script>
   
