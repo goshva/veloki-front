@@ -13,7 +13,10 @@ interface Client {
   name: string;
   phone: string;
 }
-
+interface ClientData {
+  name: string;
+  phone: string;
+}
 interface Order {
   id: number;
   bike_ids: string;
@@ -82,7 +85,13 @@ export const useApiStore = defineStore("api", () => {
       clients.value = response.data;
     }, "clients");
   }
-
+  async function createClient(clientData: ClientData) {
+    return withLoading(async () => {
+      const response = await axios.post(`${apiBaseUrl}/clients`, clientData);
+      clients.value.push(response.data);
+      return response.data;
+    }, "clients");
+  }
   async function fetchOrders() {
     return withLoading(async () => {
       const response = await axios.get(`${apiBaseUrl}/orders`);
@@ -131,15 +140,14 @@ export const useApiStore = defineStore("api", () => {
   }
 
   return {
-    // State
     bikes,
     clients,
     orders,
     prices,
     loading,
     dataLoaded,
-
     // Actions
+    createClient,
     fetchBikes,
     fetchClients,
     fetchOrders,
