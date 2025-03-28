@@ -4,7 +4,7 @@
       <template v-if="store.dataLoaded.orders">
         <ul v-if="store.orders.length" class="space-y-3">
           <li v-for="order in store.orders" :key="order.id" 
-              class="p-3 bg-dark-void rounded-lg hover:bg-gray-700 transition-all">
+              class="p-3 bg-dark-void rounded-lg hover:bg-gray-400 transition-all">
             <div class="flex justify-between items-center">
               <span>Order #{{ order.id }} - {{ order.status }}</span>
               <span class="text-cyber-teal">₽{{ order.total_cost }}</span>
@@ -17,8 +17,14 @@
             </ul>
             <button v-if="order.status === 'active'" 
                     @click="endOrder(order.id)"
-                    class="mt-2 w-full py-1 bg-cyber-teal text-dark-void rounded-lg hover:bg-teal-400 transition-all">
+                    class="mt-2 w-full py-1 bg-teal-200 text-dark-void rounded-lg hover:bg-teal-400 transition-all">
               End Order
+            </button>
+
+            <button v-if="order.status === 'completed'"
+                    @click="deleteOrder(order.id)"
+                    class="mt-2 w-full py-1 bg-red-500 rounded-lg hover:bg-red-700 transition-all">
+              Delete Order
             </button>
           </li>
         </ul>
@@ -51,4 +57,14 @@
       alert('Failed to end order')
     }
   }
+
+  async function deleteOrder(orderId: number) {
+    try {
+      await store.deleteOrder(orderId)
+      await store.fetchOrders()
+    } catch (error) {
+      alert('Failed to delete order')
+    }
+  }
+
   </script>
