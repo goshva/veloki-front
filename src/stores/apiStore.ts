@@ -146,6 +146,13 @@ export const useApiStore = defineStore("api", () => {
     }, "orders");
   }
 
+  async function deleteOrder(orderId: number) {
+    await withLoading(async () => {
+      await axios.delete(`${apiBaseUrl}/orders/${orderId}`);
+      orders.value = orders.value.filter((order) => order.id !== orderId);
+    }, "orders");
+  }
+
   async function updateBike(bikeId: number, bikeData: Partial<Bike>) {
     await withLoading(async () => {
       const response = await axios.put(`${apiBaseUrl}/bikes/${bikeId}`, bikeData);
@@ -173,5 +180,6 @@ export const useApiStore = defineStore("api", () => {
     createOrder,
     updateOrder,
     updateBike,
+    deleteOrder
   };
 });
