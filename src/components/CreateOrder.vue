@@ -89,7 +89,7 @@ const clientSearch = ref('')
 const newClientName = ref('')
 const showDropdown = ref(false)
 const selectedClient = ref<Client | null>(null)
-const debounceTimeout = ref<NodeJS.Timeout | null>(null)
+const debounceTimeout = ref<ReturnType<typeof setTimeout> | null>(null);
 
 interface Client {
   id: number;

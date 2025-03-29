@@ -20,7 +20,8 @@
   
   <script setup lang="ts">
   import { ref, watch } from 'vue';
-  
+  //import type { Bike } from '../types/bike';
+  import type { Bike } from '@/types/bike';
   const props = defineProps<{ selectedBike: Bike }>();
   const emit = defineEmits<{ (e: 'save', bike: Bike): void }>();
   

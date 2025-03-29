@@ -21,6 +21,7 @@ import { ref } from 'vue';
 import { useApiStore } from '../stores/apiStore';
 import { onMounted } from 'vue';
 import LoadingState from './LoadingState.vue';
+import type { Bike } from '@/types/bike';
 import BikeEdit from './BikeEdit.vue';
 
 const store = useApiStore();
