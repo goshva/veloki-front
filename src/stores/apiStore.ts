@@ -1,49 +1,14 @@
 import { defineStore } from "pinia";
 import axios from "axios";
 import { ref } from "vue";
-
-interface Bike {
-  id: number;
-  name: string;
-  group: "mechanical" | "electric";
-}
-
-interface Client {
-  id: number;
-  name: string;
-  phone: string;
-}
-
-interface ClientData {
-  name: string;
-  phone: string;
-}
-
-interface Order {
-  id: number;
-  bike_ids: string;
-  bike_groups: string;
-  status: string;
-  duration_hours: number;
-  bike_costs: Record<string, string>;
-  total_cost: string;
-  end_time?: string;
-}
-
-interface Price {
-  id: number;
-  bike_group: string;
-  duration: string;
-  price: string;
-}
-
-interface OrderData {
-  bike_ids: number[];
-  start_time: string;
-  status: string;
-  client_id: number;
-  end_time?: string;
-}
+import { type Bike } from "@/types/bike";
+import { type Client, type CreateClientDTO } from "@/types/client";
+import {
+  type Order,
+  type CreateOrderDTO,
+  type UpdateOrderDTO,
+} from "@/types/order";
+import { type Price } from "@/types/price";
 
 export const useApiStore = defineStore("api", () => {
   const bikes = ref<Bike[]>([]);
@@ -78,65 +43,65 @@ export const useApiStore = defineStore("api", () => {
 
   async function fetchBikes() {
     await withLoading(async () => {
-      const response = await axios.get(`${apiBaseUrl}/bikes`);
+      const response = await axios.get<Bike[]>(`${apiBaseUrl}/bikes`);
       bikes.value = response.data;
     }, "bikes");
   }
 
   async function fetchClients() {
     await withLoading(async () => {
-      const response = await axios.get(`${apiBaseUrl}/clients`);
+      const response = await axios.get<Client[]>(`${apiBaseUrl}/clients`);
       clients.value = response.data;
     }, "clients");
   }
 
-  async function createClient(clientData: ClientData) {
-    const response = await axios.post(`${apiBaseUrl}/clients`, clientData);
-  
+  async function createClient(CreateClientDTO: CreateClientDTO) {
+    const response = await axios.post(`${apiBaseUrl}/clients`, CreateClientDTO);
+
     // Log the response to verify its structure
-    console.log('API Response:', response.data);
-  
+    console.log("API Response:", response.data);
+
     // Ensure the response contains the expected client object
     if (response.data && response.data.id) {
       const newClient = {
         id: response.data.id,
-        name: clientData.name,
-        phone: clientData.phone,
+        name: CreateClientDTO.name,
+        phone: CreateClientDTO.phone,
       };
       clients.value.push(newClient);
       return newClient;
     } else {
-      throw new Error('Failed to create client: Invalid response');
+      throw new Error("Failed to create client: Invalid response");
     }
   }
 
   async function fetchOrders() {
     await withLoading(async () => {
-      const response = await axios.get(`${apiBaseUrl}/orders`);
+      const response = await axios.get<Order[]>(`${apiBaseUrl}/orders`);
       orders.value = response.data;
     }, "orders");
   }
 
   async function fetchPrices() {
     await withLoading(async () => {
-      const response = await axios.get(`${apiBaseUrl}/prices`);
+      const response = await axios.get<Price[]>(`${apiBaseUrl}/prices`);
       prices.value = response.data;
     }, "prices");
   }
 
-  async function createOrder(orderData: OrderData) {
+  async function createOrder(CreateOrderDTO: CreateOrderDTO) {
     await withLoading(async () => {
-      const response = await axios.post(`${apiBaseUrl}/orders`, orderData);
+      const response = await axios.post(`${apiBaseUrl}/orders`, CreateOrderDTO);
       orders.value.push(response.data);
       return response.data;
     }, "orders");
   }
 
-  async function updateOrder(orderId: number, orderData: Partial<OrderData>) {
+  async function updateOrder(orderId: number, UpdateOrderDTO: UpdateOrderDTO) {
     await withLoading(async () => {
       const response = await axios.put(
         `${apiBaseUrl}/orders/${orderId}`,
-        orderData
+        UpdateOrderDTO
       );
       const index = orders.value.findIndex((order) => order.id === orderId);
       if (index !== -1) {
@@ -155,7 +120,10 @@ export const useApiStore = defineStore("api", () => {
 
   async function updateBike(bikeId: number, bikeData: Partial<Bike>) {
     await withLoading(async () => {
-      const response = await axios.put(`${apiBaseUrl}/bikes/${bikeId}`, bikeData);
+      const response = await axios.put(
+        `${apiBaseUrl}/bikes/${bikeId}`,
+        bikeData
+      );
       const index = bikes.value.findIndex((bike) => bike.id === bikeId);
       if (index !== -1) {
         bikes.value[index] = { ...bikes.value[index], ...response.data };
@@ -180,6 +148,6 @@ export const useApiStore = defineStore("api", () => {
     createOrder,
     updateOrder,
     updateBike,
-    deleteOrder
+    deleteOrder,
   };
 });
