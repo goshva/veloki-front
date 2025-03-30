@@ -1,51 +1,115 @@
 <template>
-  <div class="bg-neon-gray p-4 rounded-xl shadow-lg">
-    <BikeEdit
-      v-if="selectedBike"
-      :selectedBike="selectedBike"
-      @save="saveBike"
-    />
-    <h2 class="text-lg font-semibold text-cyber-teal mb-3">Bikes</h2>
-    <template v-if="store.dataLoaded.bikes">
-      <ul v-if="store.bikes.length" class="space-y-2">
+  <FilterForBikeList @filter-applied="handleFilterChange" />
+
+  <div
+    class="bg-white p-4 md:p-6 rounded-xl shadow-lg border border-gray-200 mt-4"
+  >
+    <div v-if="selectedBike" class="mb-6 border-b border-gray-200 pb-4">
+      <h3 class="text-lg font-medium text-gray-700 mb-3">
+        Edit {{ selectedBike?.name }}
+      </h3>
+      <BikeEdit
+        :selected-bike="selectedBike"
+        @save="saveBike"
+        @cancel="cancelEdit"
+      />
+    </div>
+
+    <h2 class="text-xl font-semibold text-gray-800 mb-4 mt-0">
+      Bikes
+      <span
+        v-if="currentFilter !== 'all'"
+        class="text-base font-normal text-gray-500 ml-2"
+      >
+        (Filtered by: {{ currentFilter }})
+      </span>
+    </h2>
+
+    <template v-if="store.loading">
+      <LoadingState />
+    </template>
+    <template v-else-if="store.dataLoaded.bikes">
+      <ul v-if="filteredBikes.length" class="space-y-3">
         <li
-          v-for="bike in store.bikes"
+          v-for="bike in filteredBikes"
           :key="bike.id"
           @click="editBike(bike)"
-          class="p-2 bg-dark-void rounded-lg hover:bg-stone-200 transition-all cursor-pointer"
+          tabindex="0"
+          class="flex items-center justify-between px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 focus:border-blue-400 transition-all duration-150 ease-in-out cursor-pointer"
         >
-          {{ bike.name }}
-          <span class="text-cyber-teal">({{ bike.group }})</span>
+          <span class="font-medium text-gray-800">{{ bike.name }}</span>
+          <span class="text-sm text-blue-600 ml-2">({{ bike.group }})</span>
         </li>
       </ul>
-      <p v-else class="text-center text-gray-500 py-4">No bikes found</p>
+      <p v-else class="text-center text-gray-500 py-8">
+        {{
+          currentFilter === "all"
+            ? "No bikes found."
+            : "No bikes match the current filter."
+        }}
+      </p>
     </template>
-    <LoadingState v-else />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useApiStore } from "../stores/apiStore";
-import { onMounted } from "vue";
 import LoadingState from "./LoadingState.vue";
 import type { Bike } from "@/types/bike";
 import BikeEdit from "./BikeEdit.vue";
+import FilterForBikeList from "./filters/FilterForBikeList.vue";
+
+type BikeGroupFilter = "mechanical" | "electric" | "all";
 
 const store = useApiStore();
 const selectedBike = ref<Bike | null>(null);
+const currentFilter = ref<BikeGroupFilter>("all");
 
 onMounted(() => {
-  store.fetchBikes();
+  if (!store.dataLoaded.bikes && !store.loading) {
+    store.fetchBikes();
+  }
 });
 
-const editBike = (bike: Bike) => {
-  selectedBike.value = { ...bike };
+const filteredBikes = computed(() => {
+  if (!store.dataLoaded.bikes) {
+    return [];
+  }
+  if (currentFilter.value === "all") {
+    return store.bikes;
+  }
+  return store.bikes.filter((bike) => bike.group === currentFilter.value);
+});
+
+const handleFilterChange = (selectedGroup: BikeGroupFilter) => {
+  currentFilter.value = selectedGroup;
+  if (
+    selectedBike.value &&
+    selectedGroup !== "all" &&
+    selectedBike.value.group !== selectedGroup
+  ) {
+    selectedBike.value = null;
+  } else if (selectedBike.value && selectedGroup === "all") {
+    // No reset needed if 'all' is selected
+  }
 };
 
-const saveBike = (updatedBike: Bike) => {
-  store.updateBike(updatedBike.id, updatedBike).then(() => {
+const editBike = (bike: Bike) => {
+  selectedBike.value = JSON.parse(JSON.stringify(bike));
+};
+
+const saveBike = async (updatedBikeData: Partial<Bike>) => {
+  if (!selectedBike.value) return;
+  try {
+    await store.updateBike(selectedBike.value.id, updatedBikeData);
     selectedBike.value = null;
-  });
+  } catch (error) {
+    console.error("Failed to save bike:", error);
+  }
+};
+
+const cancelEdit = () => {
+  selectedBike.value = null;
 };
 </script>
