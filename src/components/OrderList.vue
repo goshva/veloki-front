@@ -16,7 +16,7 @@
               </li>
             </ul>
             <button v-if="order.status === 'active'" 
-                    @click="endOrder(order.id)"
+                    @click="OpenEndOrderModal(order)"
                     class="mt-2 w-full py-1 bg-teal-200 text-dark-void rounded-lg hover:bg-teal-400 transition-all">
               End Order
             </button>
@@ -31,28 +31,75 @@
         <p v-else class="text-center text-gray-500 py-4">No orders found</p>
       </template>
       <LoadingState v-else />
+
+      <!-- модалка заказа -->
+      <div v-if="showModal" class=" bg-gray-300 bg-opacity-50 fixed inset-0 flex items-center justify-center ">
+        <div class="bg-gray-400 p-4 rounded-xl shadow-lg w-80">
+          <h3 class="text-lg font-bold text-cyber-teal mb-3">Complete Order #{{ selectedOrder?.id }}</h3>
+          <p class="text-ld font-semibold"> Total #{{ selectedOrder?.total_cost }}</p>
+          <label class="block mt-2 text-gray-300">Payment received by:</label>
+          <select v-model="selectedPaymentMethod"
+                    class="mt-1 w-full p-2 bg-dark-void border border-gray-600 rounded-lg  focus:outline-none focus:ring-2 focus:ring-cyber-teal"> 
+              <option value="roma">Roma</option>
+              <option value="misha">Misha</option>
+              <option value="cash">Cash</option>
+          </select>
+          <div class="mt-4 flex gap-2">
+            <button @click="endOrder(selectedOrder?.id!)"
+                    class="mt-2 w-full py-1 bg-teal-200 text-dark-void rounded-lg hover:bg-teal-400 transition-all">
+              End Order
+            </button>
+            <button @click="closeModal"
+                    class="mt-2 w-full py-1 bg-red-500 rounded-lg hover:bg-red-700 transition-all">
+              Cancel
+            </button>
+                        <button @click="deleteOrder (selectedOrder?.id!)"
+                    class="mt-2 w-full py-1 bg-red-500 rounded-lg hover:bg-red-700 transition-all">
+              Delete Order
+            </button>
+          </div>
+        </div>
+      </div>
+
     </div>
   </template>
   
   <script setup lang="ts">
   import { useApiStore } from '../stores/apiStore'
-  import { onMounted } from 'vue'
+  import { ref, onMounted } from 'vue'
   import LoadingState from './LoadingState.vue'
+  import { Order } from '../types/order'
   
   const store = useApiStore()
+  const showModal = ref(false)
+  const selectedOrder = ref<Order | null>(null)
+  const selectedPaymentMethod = ref('')
   
   onMounted(() => {
     store.fetchOrders()
   })
+
+  function OpenEndOrderModal(order: Order) {
+    showModal.value = true
+    selectedOrder.value = order
+    selectedPaymentMethod.value = 'Select payment'
+  }
+
+  function closeModal() {
+    showModal.value = false
+    selectedOrder.value = null
+  }
   
   async function endOrder(orderId: number) {
-    const endTime = new Date().toISOString().slice(0, 19).replace('T', ' ')
+    if (!orderId) return
+    const endTime = new Date().toISOString().slice(0, 19).replace('T', ' ');
     try {
       await store.updateOrder(orderId, {
         end_time: endTime,
-        status: 'completed',
+        payment_received_by: selectedPaymentMethod.value
       })
-      store.fetchOrders()
+      await store.fetchOrders()
+      closeModal()
     } catch (error) {
       alert('Failed to end order')
     }
@@ -62,6 +109,9 @@
     try {
       await store.deleteOrder(orderId)
       await store.fetchOrders()
+      if (showModal.value) {
+        closeModal()
+      }
     } catch (error) {
       alert('Failed to delete order')
     }

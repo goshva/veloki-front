@@ -7,6 +7,7 @@ export interface Order {
   bike_costs: Record<string, string>;
   total_cost: string;
   end_time?: string;
+  payment_receiver?: string;
 }
 
 export interface CreateOrderDTO {
@@ -23,4 +24,5 @@ export interface UpdateOrderDTO {
   status?: string;
   client_id?: number;
   end_time?: string;
+  payment_received_by: string;
 }
