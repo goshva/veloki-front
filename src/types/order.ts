@@ -24,5 +24,5 @@ export interface UpdateOrderDTO {
   status?: string;
   client_id?: number;
   end_time?: string;
-  payment_received_by: string;
+  acceptor: string;
 }
