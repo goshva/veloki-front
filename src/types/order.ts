@@ -8,6 +8,7 @@ export interface Order {
   total_cost: string;
   end_time?: string;
   payment_receiver?: string;
+  client_id: number;
 }
 
 export interface CreateOrderDTO {
