@@ -12,6 +12,7 @@ import { type Price } from "@/types/price";
 
 export const useApiStore = defineStore("api", () => {
   const bikes = ref<Bike[]>([]);
+
   const clients = ref<Client[]>([]);
   const orders = ref<Order[]>([]);
   const prices = ref<Price[]>([]);
@@ -118,6 +119,26 @@ export const useApiStore = defineStore("api", () => {
     }, "orders");
   }
 
+  async function createBike(createBikeDTO: Partial<Bike>) {
+    await withLoading(async () => {
+      const response = await axios.post(`${apiBaseUrl}/bikes`, createBikeDTO);
+
+      // Ensure the response contains the expected bike object
+      if (response.data && response.data.id) {
+        const newBike: Bike = {
+          id: response.data.id,
+          name: createBikeDTO.name || "",
+          group: createBikeDTO.group || "mechanical",
+          qrCode: createBikeDTO.qrCode || "",
+        };
+        bikes.value.push(newBike);
+        return newBike;
+      } else {
+        throw new Error("Failed to create bike: Invalid response");
+      }
+    }, "bikes");
+  }
+
   async function updateBike(bikeId: number, bikeData: Partial<Bike>) {
     await withLoading(async () => {
       const response = await axios.put(
@@ -147,6 +168,7 @@ export const useApiStore = defineStore("api", () => {
     fetchPrices,
     createOrder,
     updateOrder,
+    createBike,
     updateBike,
     deleteOrder,
   };

@@ -11,6 +11,7 @@
   "dependencies": {
     "@tailwindcss/postcss": "^4.0.17",
     "@tailwindcss/vite": "^4.0.17",
+    "@teckel/vue-barcode-reader": "^1.1.8",
     "axios": "^1.8.4",
     "pinia": "^3.0.1",
     "tailwindcss": "^4.0.17",
